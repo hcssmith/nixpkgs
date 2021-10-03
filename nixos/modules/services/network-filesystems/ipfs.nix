@@ -273,6 +273,10 @@ in
           } //
           cfg.extraConfig))
       );
+      # Fix config permissions
+      postStart = ''
+        chmod g+rw "$IPFS/config"
+      '';
       serviceConfig = {
         ExecStart = [ "" "${cfg.package}/bin/ipfs daemon ${ipfsFlags}" ];
         User = cfg.user;
