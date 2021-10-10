@@ -275,7 +275,7 @@ in
       );
       # Fix config permissions
       postStart = ''
-        chmod g+rw "$IPFS/config"
+        chmod g+rw "${cfg.dataDir}/config"
       '';
       serviceConfig = {
         ExecStart = [ "" "${cfg.package}/bin/ipfs daemon ${ipfsFlags}" ];
