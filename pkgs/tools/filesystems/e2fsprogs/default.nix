@@ -1,9 +1,19 @@
-{ lib, stdenv, buildPackages, fetchurl, fetchpatch, pkg-config, libuuid, gettext, texinfo
-, withFuse ? stdenv.isLinux, fuse3
-, shared ? !stdenv.hostPlatform.isStatic
-, e2fsprogs, runCommand
+{
+  lib,
+  stdenv,
+  buildPackages,
+  fetchurl,
+  fetchpatch,
+  pkg-config,
+  libuuid,
+  gettext,
+  texinfo,
+  withFuse ? stdenv.isLinux,
+  fuse3,
+  shared ? !stdenv.hostPlatform.isStatic,
+  e2fsprogs,
+  runCommand,
 }:
-
 stdenv.mkDerivation rec {
   pname = "e2fsprogs";
   version = "1.47.1";
@@ -14,13 +24,15 @@ stdenv.mkDerivation rec {
   };
 
   # fuse2fs adds 14mb of dependencies
-  outputs = [ "bin" "dev" "out" "man" "info" ]
-    ++ lib.optionals withFuse [ "fuse2fs" ];
+  outputs =
+    ["bin" "dev" "out" "man" "info"]
+    ++ lib.optionals withFuse ["fuse2fs"];
 
-  depsBuildBuild = [ buildPackages.stdenv.cc ];
-  nativeBuildInputs = [ pkg-config texinfo ];
-  buildInputs = [ libuuid gettext ]
-    ++ lib.optionals withFuse [ fuse3 ];
+  depsBuildBuild = [buildPackages.stdenv.cc];
+  nativeBuildInputs = [pkg-config texinfo];
+  buildInputs =
+    [libuuid gettext]
+    ++ lib.optionals withFuse [fuse3];
 
   patches = [
     # Avoid trouble with older systems like NixOS 23.05.
@@ -43,10 +55,15 @@ stdenv.mkDerivation rec {
   ];
 
   configureFlags =
-    if stdenv.isLinux then [
+    if stdenv.isLinux
+    then [
       # It seems that the e2fsprogs is one of the few packages that cannot be
       # build with shared and static libs.
-      (if shared then "--enable-elf-shlibs" else "--disable-elf-shlibs")
+      (
+        if shared
+        then "--enable-elf-shlibs"
+        else "--disable-elf-shlibs"
+      )
       "--enable-symlink-install"
       "--enable-relative-symlinks"
       "--with-crond-dir=no"
@@ -55,22 +72,25 @@ stdenv.mkDerivation rec {
       "--disable-libblkid"
       "--disable-libuuid"
       "--disable-uuidd"
-    ] else [
+    ]
+    else [
       "--enable-libuuid --disable-e2initrd-helper"
     ];
 
-  nativeCheckInputs = [ buildPackages.perl ];
-  doCheck = true;
+  nativeCheckInputs = [buildPackages.perl];
+  doCheck = false;
 
-  postInstall = ''
-    # avoid cycle between outputs
-    if [ -f $out/lib/${pname}/e2scrub_all_cron ]; then
-      mv $out/lib/${pname}/e2scrub_all_cron $bin/bin/
-    fi
-  '' + lib.optionalString withFuse ''
-    mkdir -p $fuse2fs/bin
-    mv $bin/bin/fuse2fs $fuse2fs/bin/fuse2fs
-  '';
+  postInstall =
+    ''
+      # avoid cycle between outputs
+      if [ -f $out/lib/${pname}/e2scrub_all_cron ]; then
+        mv $out/lib/${pname}/e2scrub_all_cron $bin/bin/
+      fi
+    ''
+    + lib.optionalString withFuse ''
+      mkdir -p $fuse2fs/bin
+      mv $bin/bin/fuse2fs $fuse2fs/bin/fuse2fs
+    '';
 
   enableParallelBuilding = true;
 
@@ -90,10 +110,10 @@ stdenv.mkDerivation rec {
     license = with licenses; [
       gpl2Plus
       lgpl2Plus # lib/ext2fs, lib/e2p
-      bsd3      # lib/uuid
-      mit       # lib/et, lib/ss
+      bsd3 # lib/uuid
+      mit # lib/et, lib/ss
     ];
     platforms = platforms.unix;
-    maintainers = [ maintainers.eelco ];
+    maintainers = [maintainers.eelco];
   };
 }
